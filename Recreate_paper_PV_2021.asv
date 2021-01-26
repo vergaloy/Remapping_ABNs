@@ -9,4 +9,4 @@ sf=5;   %frame rate
 %% Figure 2
 clus=cluster_activity_vectors(at); 
 %% Figure 3
-Activity_table=get_ABNs_remapping_in_time(a,D,N,hyp,sf,bin); %% Activity_table contains the data to recreate Fig 3E.
+out=get_ABNs_remapping_in_time(a,D,N,hyp,sf,bin); 
