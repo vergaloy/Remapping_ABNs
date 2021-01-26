@@ -1,0 +1,130 @@
+function out=get_ABNs_remapping_in_time(a,D,N,hyp,sf,bin)
+%   [si,RS]= get_ABNs_remapping_in_time(a,D,N,hyp,5,1)
+
+
+X=D{1,4}; %get consolidation period
+hyp=bin_data(hyp,sf,bin);  %donwsample the hypnogram to 1 second. 
+dur=round(size(X,2)/60); %time of each bin in minutes
+
+% Get remapping score sleep
+div=10; %the total consolidation period is divided in 10 bins.
+O=get_activity_vectors_consolidation(X,N,hyp,div); %get mean activities in each bin
+O_S=squeeze(O(:,:,1)); %get sleep  (NREM and REM);  
+RS_sleep=get_remapping_score(O_S); %get remapping score sleep
+
+% Get remapping score Wake
+O_W=O(:,:,2); %get sleep  (Wake);  
+RS_W=get_remapping_score(O_W); %get remapping score wake
+
+% Get remapping score All
+B=O(:,:,3); %get All (NREM ,REM and Wake);  
+RS=get_remapping_score(B); %get remapping score All
+
+%% plot Pearson correlation
+s=dur/div;
+x=s*2:s:dur-s;
+figure;hold on;
+fit_line(x,RS);
+fit_line(x,RS_sleep);
+fit_line(x,RS_W);
+xlabel('Time (min)');ylabel('Remapping score');
+
+%% Plot activity vectors
+[~,I]=sort(B(:,end)-B(:,1));
+B=B./prctile(B,95,1);
+B(B>1)=1;
+figure;plot_B(B(I,:),x);
+
+%% Get significant remapping cells
+RS=B;
+[r0,p]=significant_corr(RS);
+h=fdr_bh(p); % correct by false-discovery rate
+s1=logical(h.*(r0<0)); %significant (-) correlations
+s2=logical(h.*(r0>0)); %significant (+) correlations
+s0=(s1+s2)==0;
+
+%% plot stuff%
+D1=RS(s1,:);
+D2=RS(s2,:);
+% D1=D1./max(D1,[],2);
+% D2=D2./-min(D2,[],2);
+Dp=[D1;D2];
+Dp=Dp./max(Dp,[],2); % scale each neuron activities from 0 to 1.
+figure;imagesc(Dp);colormap('hot');
+co = colorbar;co.Label.String = 'Neuron id.';co.Label.FontSize = 12;
+xlabel('Time bin')
+yline(size(D1,1)+0.5,'-b','LineWidth',3)
+
+%% cluster neurons
+figure;cluster_activity_vectors(a((s1+s2)>0,:));
+figure;cluster_activity_vectors(a((s1+s2)==0,:));
+
+
+%get preS and postS activty vectors
+Apre=mean(a(:,2:3),2);
+Apre=Apre./prctile(Apre,95,1);
+Apre(Apre>1)=1;
+
+Apost=a(:,5);
+Apost=Apost./prctile(Apost,95,1);
+Apost(Apost>1)=1;
+
+All=[Apre,B,Apost];
+Ao={};
+Ao(:,1)={'preS+postS';'15';'30';'45';'60';'75';'90';'105';'120';'135';'150';'Test'};
+Ao(:,2)=num2cell(bootstrap(All(s1,:)),2);
+Ao(:,3)=num2cell(bootstrap(All(s2,:)),2);
+Ao(:,4)=num2cell(bootstrap(All(s0,:)),2);
+
+for i=1:size(All,2)
+    X=catpad(2,All(s1,i),All(s2,i));
+    [~,significant]=bootstrap(X,12);
+    Pa(i,:)=significant(1,:);
+end
+Ao(:,5)=num2cell(Pa(:,2),2);
+out = cell2table(Ao,'VariableNames',{'Row labels','Decreasing CI','Increasing CI','Non_remapping CI','Decr_vs_Incrs_significance'});
+
+
+% print # of remapping neurons:
+fprintf('# of remapping neurons: \n');
+% PreCon.  - postCon. - Non-remapping
+fprintf('PreCon.  - postCon. - Non-remapping \n');
+[sum(s1),sum(s2),sum(s0)]
+
+end
+
+function plot_B(B,x)
+le=length(x)+2;
+subplot(1,le,1);
+imagesc(B(:,1));colormap('hot');
+xlabel('15');
+subplot(1,le,2:le-1);
+imagesc(B(:,2:le-1));colormap('hot');
+subplot(1,le,le);
+imagesc(B(:,le));colormap('hot');
+xlabel('150');
+end
+
+
+function RS=get_remapping_score(T)
+T=T./prctile(T,95,1);
+T(T>1)=1;
+A=T(:,1);
+C=T(:,end); 
+B=T(:,2:end-1);
+RS=-((1-get_cosine(A,B))-(1-get_cosine(C,B)))./((1-get_cosine(A,B))+(1-get_cosine(C,B)));
+
+end
+
+
+function [r,p]=significant_corr(D2)
+x=1:size(D2,2);
+for i=1:size(D2,1)
+[r(i),p(i)]=corr(x',D2(i,:)');
+end
+end
+
+
+
+
+
