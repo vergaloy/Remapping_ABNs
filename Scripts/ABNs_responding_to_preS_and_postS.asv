@@ -22,9 +22,9 @@ end
     
     
     
-fprintf('ABNs increasing their activity in HC vs preS, and preS vs postS: \n');
+fprintf('ABNs increasing their activity in HC vs preS and HC_vs_postS: \n');
 increasing=sum(IX==1,1)
-fprintf('ABNs increasing their activity in HC vs preS, and preS vs postS: \n');
+fprintf('ABNs decreasing their activity in preS and postS: \n');
 decreasing=sum(IX==-1,1)
 
 % plot stuff
