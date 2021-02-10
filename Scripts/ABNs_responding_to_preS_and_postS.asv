@@ -22,13 +22,13 @@ end
     
     
     
-fprintf('ABNs increasing their activity in HC vs preS and HC_vs_postS: \n');
+fprintf('ABNs increasing their activity in HC vs preS, and preS vs postS: \n');
 increasing=sum(IX==1,1)
-fprintf('ABNs decreasing their activity in preS and postS: \n');
+fprintf('ABNs increasing their activity in HC vs preS, and preS vs postS: \n');
 decreasing=sum(IX==-1,1)
 
 % plot stuff
-X=[D{1,1},D{1,2},D{1,3}];temp=X(IX(:,2)==1,:);
+X=[D{1,1},D{1,2},D{1,3}];temp=X(IX(:,1)==1,:);
 temp=bin_data(temp,1,10);
 temp=temp/max(temp(:));
 mid(1)=size(D{1,1},2)/10;

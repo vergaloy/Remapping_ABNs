@@ -8,17 +8,17 @@ dur=round(size(X,2)/60); %time of each bin in minutes
 
 % Get remapping score sleep
 div=10; %the total consolidation period is divided in 10 bins.
-O=get_activity_vectors_consolidation(X,N,hyp,div); 
+O=get_activity_vectors_consolidation(X,N,hyp,div); %get mean activities in each bin
 O_S=squeeze(O(:,:,1)); %get sleep  (NREM and REM);  
-RS_sleep=get_remapping_score(O_S);
+RS_sleep=get_remapping_score(O_S); %get remapping score sleep
 
 % Get remapping score Wake
-O_W=O(:,:,2);
-RS_W=get_remapping_score(O_W);
+O_W=O(:,:,2); %get sleep  (Wake);  
+RS_W=get_remapping_score(O_W); %get remapping score wake
 
 % Get remapping score All
-B=O(:,:,3);
-RS=get_remapping_score(B);
+B=O(:,:,3); %get All (NREM ,REM and Wake);  
+RS=get_remapping_score(B); %get remapping score All
 
 %% plot Pearson correlation
 s=dur/div;
@@ -49,15 +49,15 @@ D2=RS(s2,:);
 % D1=D1./max(D1,[],2);
 % D2=D2./-min(D2,[],2);
 Dp=[D1;D2];
-Dp=Dp./max(Dp,[],2);
+Dp=Dp./max(Dp,[],2); % scale each neuron activities from 0 to 1.
 figure;imagesc(Dp);colormap('hot');
-co = colorbar;co.Label.String = 'Remapping contribution';co.Label.FontSize = 12;
+co = colorbar;co.Label.String = 'Neuron id.';co.Label.FontSize = 12;
 xlabel('Time bin')
 yline(size(D1,1)+0.5,'-b','LineWidth',3)
 
 %% cluster neurons
 figure;cluster_activity_vectors(a((s1+s2)>0,:));
-figure;cluster_activity_vectors(a((s1+s2)==0,:));
+figure;cluster_activity_vectors(a(s0,:));
 
 
 %get preS and postS activty vectors
@@ -105,14 +105,6 @@ imagesc(B(:,le));colormap('hot');
 xlabel('150');
 end
 
-function B=means_binned_data(in,bsize)
-lin=round(linspace(1,size(in,2),bsize+1));
-for i=1:size(lin,2)-1
-B(:,i)=mean(in(:,lin(i):lin(i+1)),2);   
-end    
-end
-
-
 
 function RS=get_remapping_score(T)
 T=T./prctile(T,95,1);
@@ -133,18 +125,6 @@ end
 end
 
 
-function out=get_cosine_by_element(A,B)
-for i=1:size(B,2)
-    b=B(:,i);
-    a=A;
-    I=isnan(b);
-    b(I)=0;
-    a(I)=0;
-    temp=(a.*b)/(norm(a)*norm(b));
-    out(:,i)=temp;
-end
-
-end
 
 
 

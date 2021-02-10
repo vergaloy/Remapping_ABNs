@@ -57,7 +57,7 @@ yline(size(D1,1)+0.5,'-b','LineWidth',3)
 
 %% cluster neurons
 figure;cluster_activity_vectors(a((s1+s2)>0,:));
-figure;cluster_activity_vectors(a((s1+s2)==0,:));
+figure;cluster_activity_vectors(a(s0,:));
 
 
 %get preS and postS activty vectors
